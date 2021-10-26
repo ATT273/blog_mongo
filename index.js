@@ -7,13 +7,15 @@ const app = express();
 const port = 3000;
 
 
-app.use(cors())
+app.use(cors({ origin: '*' }))
 app.use(bodyParser.json());
 
 // import routes
 const postRoute = require('./routes/posts');
+const transactionRoute = require('./routes/transactions');
 
 app.use('/posts', postRoute);
+app.use('/transactions', transactionRoute);
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
