@@ -3,10 +3,21 @@ const Transaction = require('../models/Transaction');
 const router = express.Router();
 
 // get all transactions
-router.get('/', async (req, res) => {
-    console.log(`req`, req.query)
+router.get('/get-all', async (req, res) => {
     try {
         const transactions = await Transaction.find();
+        res.json(transactions);
+    }
+    catch (error) {
+        res.json({ message: error })
+    }
+});
+// search
+router.get('/', async (req, res) => {
+    console.log(`req`, req.query)
+    const { query } = req
+    try {
+        const transactions = await Transaction.find({ date: { $gte: new Date(query.startDate), $lte: new Date(query.endDate) } }).sort({ date: 'asc' });
         res.json(transactions);
     }
     catch (error) {
