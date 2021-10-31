@@ -14,7 +14,11 @@ const TransactionSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    amount: Number
+    amount: Number,
+    isExpense: {
+        type: Boolean,
+        default: false
+    }
 });
 
 module.exports = mongoose.model('Transactions', TransactionSchema)

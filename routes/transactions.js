@@ -14,7 +14,6 @@ router.get('/get-all', async (req, res) => {
 });
 // search
 router.get('/', async (req, res) => {
-    console.log(`req`, req.query)
     const { query } = req
     try {
         const transactions = await Transaction.find({ date: { $gte: new Date(query.startDate), $lte: new Date(query.endDate) } }).sort({ date: 'asc' });
@@ -52,7 +51,7 @@ router.post('/add', async (req, res) => {
 // delete post
 router.delete('/:transactionId', async (req, res) => {
     try {
-        const deletedTransaction = await Transaction.remove({ _id: req.params.postId });
+        const deletedTransaction = await Transaction.remove({ _id: req.params.transactionId });
         res.json({ data: deletedTransaction, message: 'Delete transaction successfully' });
     } catch (error) {
         res.json({ message: error });
@@ -61,11 +60,23 @@ router.delete('/:transactionId', async (req, res) => {
 })
 
 // update transaction
-router.patch('/:postId', async (req, res) => {
+router.patch('/:transactionId', async (req, res) => {
     try {
         const updatedTransaction = await Transaction.updateOne(
             { _id: req.params.transactionId },
-            { $set: { title: req.body.title } }
+            { $set: { ...req.body } }
+        );
+        res.json({ data: updatedTransaction, message: 'Update transaction successfully' });
+    } catch (error) {
+        res.json({ message: error });
+    }
+})
+
+router.put('/:transactionId', async (req, res) => {
+    try {
+        const updatedTransaction = await Transaction.updateOne(
+            { _id: req.params.transactionId },
+            { $set: { ...req.body } }
         );
         res.json({ data: updatedTransaction, message: 'Update transaction successfully' });
     } catch (error) {
