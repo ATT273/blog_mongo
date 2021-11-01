@@ -23,6 +23,41 @@ router.get('/', async (req, res) => {
         res.json({ message: error })
     }
 });
+
+router.get('/report', async (req, res) => {
+    Transaction.aggregate([
+        {
+            $group: {
+                _id: "$categoryId",
+                total: { $sum: "$amount" }
+            }
+        }
+    ], (err, result) => {
+        if (err) {
+            console.log(`err`, err)
+            res.send(err);
+            return;
+        } else {
+            res.json({ data: result });
+        }
+    })
+    // try {
+    //     const groupTotal = Transaction.aggregate([
+    //         {
+    //             $group: {
+    //                 _id: "$categoryId",
+    //                 total: { $sum: "$amount" }
+    //             }
+    //         }
+    //     ])
+    //     console.log(`groupTotal`, groupTotal)
+    //     res.json(groupTotal);
+    // }
+    // catch (error) {
+    //     res.json({ message: error });
+    // }
+})
+
 // get transaction detail
 router.get('/:transactionId', async (req, res) => {
     try {
@@ -33,6 +68,7 @@ router.get('/:transactionId', async (req, res) => {
     }
 
 })
+
 // save transaction
 router.post('/add', async (req, res) => {
     const transaction = new Transaction({
@@ -47,6 +83,7 @@ router.post('/add', async (req, res) => {
         res.json({ message: error });
     }
 })
+
 
 // delete post
 router.delete('/:transactionId', async (req, res) => {
@@ -83,4 +120,5 @@ router.put('/:transactionId', async (req, res) => {
         res.json({ message: error });
     }
 })
+
 module.exports = router;
