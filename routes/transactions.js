@@ -1,6 +1,7 @@
 const express = require('express');
 const Transaction = require('../models/Transaction');
 const router = express.Router();
+const verify = require('./verifyToken');
 
 // get all transactions
 router.get('/get-all', async (req, res) => {
@@ -13,7 +14,7 @@ router.get('/get-all', async (req, res) => {
     }
 });
 // search
-router.get('/', async (req, res) => {
+router.get('/', verify, async (req, res) => {
     const { query } = req
     try {
         const transactions = await Transaction.find({ date: { $gte: new Date(query.startDate), $lte: new Date(query.endDate) } }).sort({ date: 'asc' });

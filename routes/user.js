@@ -112,6 +112,29 @@ router.get('/logout', async (req, res) => {
         return res.json({ status: 'success', statusCode: 200, message: 'Logged in successfull', token })
     }
     res.status(406).send({ status: 'error', statusCode: 406, message: 'Invalid username/ password' });
-})
+});
+
+
+router.get('/check-auth', async (req, res) => {
+    const token = req.header('auth-token');
+    console.log(`token`, token, req.header('auth-token'))
+    if (!token) return res.status(401).send({ status: 'error', statusCode: 401, message: 'Unauthorized' });
+
+    try {
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
+        const userLogin = await UserLogin.findOne({ username: verified.username });
+
+        if (!userLogin) {
+            return res.json({ status: 'success', statusCode: 200, message: 'Unauthorized', isAuthenticated: false });
+        }
+        res.json({ status: 'success', statusCode: 200, message: 'Authorized', isAuthenticated: true });
+
+    } catch (err) {
+        console.log(`err`, err)
+        return res.status(401).send({ status: 'error', statusCode: 401, message: 'Invalid token' });
+        // throw err
+    }
+
+});
 
 module.exports = router;
