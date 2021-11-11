@@ -59,7 +59,7 @@ router.post('/login', async (req, res) => {
     if (await bcrypt.compare(password, user.password)) {
         const userLogin = await UserLogin.findOne({ username }).lean();
         if (userLogin) {
-            const deleteLogin = await UserLogin.remove({ username });
+            const deleteLogin = await UserLogin.deleteOne({ username });
         }
 
         const token = jwt.sign({
@@ -72,46 +72,38 @@ router.post('/login', async (req, res) => {
             token
         })
 
-        return res.json({ status: 'success', statusCode: 200, message: 'Logged in successfull', token })
+        return res.json({
+            status: 'success', statusCode: 200, message: 'Logged in successfull', token, loginData: {
+                id: user._id,
+                username: user.username
+            }
+        })
     }
     res.status(406).send({ status: 'error', statusCode: 406, message: 'Invalid username/ password' });
 })
 
-router.get('/logout', async (req, res) => {
-    const { username, password } = req.body;
+router.get('/logout/', async (req, res) => {
+    const token = req.header('auth-token');
+    if (!token) return res.status(401).send({ status: 'error', statusCode: 401, message: 'Unauthorized' });
 
-    if (typeof username !== 'string') {
-        return res.status(406).send({ status: 'error', statusCode: 406, message: 'Invalid username' });
-    }
-
-    if (typeof password !== 'string') {
-        return res.status(406).send({ status: 'error', statusCode: 406, message: 'Invalid password' });
-    }
-
-    const user = await User.findOne({ username }).lean();
-
-    if (!user) {
-        return res.status(406).send({ status: 'error', statusCode: 406, message: 'Invalid username/ password' });
-    }
-    if (await bcrypt.compare(password, user.password)) {
-        const userLogin = await UserLogin.findOne({ username }).lean();
-        if (userLogin) {
-            const deleteLogin = await UserLogin.remove({ username });
+    try {
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
+        const userLogin = await UserLogin.findOne({ username: verified.username });
+        console.log(`verified.username`, verified.username)
+        if (!userLogin) {
+            return rres.status(401).send({ status: 'error', statusCode: 401, message: 'Unauthorized', isAuthenticated: false });
+        } else {
+            const deleteLogin = await UserLogin.deleteOne({ username: verified.username });
+            return res.json({ status: 'success', statusCode: 200, message: 'logged out' });
         }
 
-        const token = jwt.sign({
-            id: user._id,
-            username: user.username
-        }, process.env.JWT_SECRET);
 
-        const newLogin = await UserLogin.create({
-            username,
-            token
-        })
-
-        return res.json({ status: 'success', statusCode: 200, message: 'Logged in successfull', token })
+    } catch (err) {
+        console.log(`err`, err)
+        return res.status(401).send({ status: 'error', statusCode: 401, message: 'Invalid token' });
     }
-    res.status(406).send({ status: 'error', statusCode: 406, message: 'Invalid username/ password' });
+
+    // res.status(406).send({ status: 'error', statusCode: 406, message: 'Invalid username/ password' });
 });
 
 
