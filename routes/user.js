@@ -89,9 +89,8 @@ router.get('/logout/', async (req, res) => {
     try {
         const verified = jwt.verify(token, process.env.JWT_SECRET);
         const userLogin = await UserLogin.findOne({ username: verified.username });
-        console.log(`verified.username`, verified.username)
         if (!userLogin) {
-            return rres.status(401).send({ status: 'error', statusCode: 401, message: 'Unauthorized', isAuthenticated: false });
+            return res.status(401).send({ status: 'error', statusCode: 401, message: 'Unauthorized', isAuthenticated: false });
         } else {
             const deleteLogin = await UserLogin.deleteOne({ username: verified.username });
             return res.json({ status: 'success', statusCode: 200, message: 'logged out' });
@@ -99,7 +98,6 @@ router.get('/logout/', async (req, res) => {
 
 
     } catch (err) {
-        console.log(`err`, err)
         return res.status(401).send({ status: 'error', statusCode: 401, message: 'Invalid token' });
     }
 
@@ -109,7 +107,6 @@ router.get('/logout/', async (req, res) => {
 
 router.get('/check-auth', async (req, res) => {
     const token = req.header('auth-token');
-    console.log(`token`, token, req.header('auth-token'))
     if (!token) return res.status(401).send({ status: 'error', statusCode: 401, message: 'Unauthorized' });
 
     try {
@@ -122,7 +119,6 @@ router.get('/check-auth', async (req, res) => {
         res.json({ status: 'success', statusCode: 200, message: 'Authorized', isAuthenticated: true });
 
     } catch (err) {
-        console.log(`err`, err)
         return res.status(401).send({ status: 'error', statusCode: 401, message: 'Invalid token' });
         // throw err
     }
