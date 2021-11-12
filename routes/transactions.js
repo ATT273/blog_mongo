@@ -40,7 +40,6 @@ router.get('/report', async (req, res) => {
             }
         ], (err, result) => {
             if (err) {
-                console.log(`err`, err)
                 res.send(err);
                 return err;
             } else {
@@ -50,6 +49,36 @@ router.get('/report', async (req, res) => {
         await res.json({ report, transactions });
     }
     catch (error) {
+        res.json({ message: error });
+    }
+})
+
+router.get('/overview', async (req, res) => {
+    const { query } = req
+
+    try {
+        // const transactions = await Transaction.find({ date: { $gte: new Date(query.startDate), $lte: new Date(query.endDate) } }).sort({ date: 'asc' });
+        const report = await Transaction.aggregate([
+            {
+                $group: {
+                    _id: "$categoryId",
+                    total: { $sum: "$amount" }
+                }
+            }
+        ], (err, result) => {
+            if (err) {
+                console.log(`err`, err)
+                res.send(err);
+                return err;
+            } else {
+                return result;
+            }
+        });
+        console.log(`report`, report)
+        await res.json({ report });
+    }
+    catch (error) {
+        console.log(`error`, error)
         res.json({ message: error });
     }
 })

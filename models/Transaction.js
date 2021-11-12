@@ -18,6 +18,10 @@ const TransactionSchema = mongoose.Schema({
     isExpense: {
         type: Boolean,
         default: false
+    },
+    userId: {
+        type: String,
+        require: true
     }
 });
 
