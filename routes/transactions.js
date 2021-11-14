@@ -2,6 +2,7 @@ const express = require('express');
 const Transaction = require('../models/Transaction');
 const router = express.Router();
 const verify = require('./verifyToken');
+const jwt = require('jsonwebtoken');
 
 // get all transactions
 router.get('/get-all', async (req, res) => {
@@ -17,7 +18,7 @@ router.get('/get-all', async (req, res) => {
 router.get('/', verify, async (req, res) => {
     const { query } = req
     try {
-        const transactions = await Transaction.find({ date: { $gte: new Date(query.startDate), $lte: new Date(query.endDate) } }).sort({ date: 'asc' });
+        const transactions = await Transaction.find({ date: { $gte: new Date(query.startDate), $lte: new Date(query.endDate) }, userId: query.userId }).sort({ date: 'asc' });
         res.json(transactions);
     }
     catch (error) {
@@ -25,13 +26,13 @@ router.get('/', verify, async (req, res) => {
     }
 });
 
-router.get('/report', async (req, res) => {
+router.get('/report', verify, async (req, res) => {
     const { query } = req
 
     try {
-        const transactions = await Transaction.find({ date: { $gte: new Date(query.startDate), $lte: new Date(query.endDate) } }).sort({ date: 'asc' });
+        const transactions = await Transaction.find({ date: { $gte: new Date(query.startDate), $lte: new Date(query.endDate) }, userId: query.userId }).sort({ date: 'asc' });
         const report = await Transaction.aggregate([
-            { $match: { date: { $gte: new Date(query.startDate), $lte: new Date(query.endDate) } } },
+            { $match: { date: { $gte: new Date(query.startDate), $lte: new Date(query.endDate) }, userId: query.userId } },
             {
                 $group: {
                     _id: "$categoryId",
@@ -53,13 +54,15 @@ router.get('/report', async (req, res) => {
     }
 })
 
-router.get('/overview', async (req, res) => {
+router.get('/overview', verify, async (req, res) => {
     const { query } = req
 
     try {
         // const transactions = await Transaction.find({ date: { $gte: new Date(query.startDate), $lte: new Date(query.endDate) } }).sort({ date: 'asc' });
         const report = await Transaction.aggregate([
+            { $match: { userId: query.userId } },
             {
+
                 $group: {
                     _id: "$categoryId",
                     total: { $sum: "$amount" }
@@ -84,7 +87,7 @@ router.get('/overview', async (req, res) => {
 })
 
 // get transaction detail
-router.get('/:transactionId', async (req, res) => {
+router.get('/:transactionId', verify, async (req, res) => {
     try {
         const transaction = await Transaction.findById(req.params.transactionId);
         res.json(transaction);
@@ -95,7 +98,9 @@ router.get('/:transactionId', async (req, res) => {
 })
 
 // save transaction
-router.post('/add', async (req, res) => {
+router.post('/add', verify, async (req, res) => {
+    const token = req.header('auth-token');
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
     const transaction = new Transaction({
         ...req.body
     })
@@ -111,7 +116,7 @@ router.post('/add', async (req, res) => {
 
 
 // delete post
-router.delete('/:transactionId', async (req, res) => {
+router.delete('/:transactionId', verify, async (req, res) => {
     try {
         const deletedTransaction = await Transaction.remove({ _id: req.params.transactionId });
         res.json({ data: deletedTransaction, message: 'Delete transaction successfully' });
@@ -122,7 +127,7 @@ router.delete('/:transactionId', async (req, res) => {
 })
 
 // update transaction
-router.patch('/:transactionId', async (req, res) => {
+router.patch('/:transactionId', verify, async (req, res) => {
     try {
         const updatedTransaction = await Transaction.updateOne(
             { _id: req.params.transactionId },
@@ -134,7 +139,7 @@ router.patch('/:transactionId', async (req, res) => {
     }
 })
 
-router.put('/:transactionId', async (req, res) => {
+router.put('/:transactionId', verify, async (req, res) => {
     try {
         const updatedTransaction = await Transaction.updateOne(
             { _id: req.params.transactionId },
