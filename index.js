@@ -13,10 +13,12 @@ app.use(bodyParser.json());
 const postRoute = require('./routes/posts');
 const transactionRoute = require('./routes/transactions');
 const userRoute = require('./routes/user');
+const scoresRoute = require('./routes/scores');
 
 app.use('/posts', postRoute);
 app.use('/transactions', transactionRoute);
 app.use('/user', userRoute);
+app.use('/scores', scoresRoute);
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
